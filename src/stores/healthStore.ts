@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { supabase } from '../lib/supabase'
+import { supabase } from "../lib/supabaseClient";
+
 
 export interface JournalEntry {
   id: string
