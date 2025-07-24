@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { supabase } from '../lib/supabase'
+import { supabase } from "../lib/supabaseClient"
 import type { User } from '@supabase/supabase-js'
 
 export interface UserProfile {
@@ -28,17 +28,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   profile: null,
   loading: true,
 
-  signUp: async (email: string, password: string, userData: Partial<UserProfile>) => {
+  signUp: async (email, password, userData) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          role: userData.role || 'patient',
+        },
+      },
     })
 
     if (error) throw error
 
     if (data.user) {
       const { error: profileError } = await supabase
-        .from('users')
+        .from('user_profiles')
         .insert([
           {
             id: data.user.id,
@@ -51,18 +56,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         ])
 
       if (profileError) throw profileError
+      set({ user: data.user }) // Set user
     }
   },
 
-  signIn: async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
+  signIn: async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
-    
+
     if (data.user) {
+      set({ user: data.user })
       await get().fetchProfile(data.user.id)
     }
   },
@@ -73,37 +76,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user: null, profile: null })
   },
 
-  fetchProfile: async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single()
+  fetchProfile: async (userId) => {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('id', userId)
+      // .single()
 
-      if (error) throw error
-      set({ profile: data })
-    } catch (error) {
-      console.error('Error fetching profile:', error)
-    }
+    if (error) throw error
+    set({ profile: data })
   },
 
-  updateProfile: async (updates: Partial<UserProfile>) => {
+  updateProfile: async (updates) => {
     const { profile } = get()
     if (!profile) return
 
     const { error } = await supabase
-      .from('users')
+      .from('user_profiles')
       .update(updates)
       .eq('id', profile.id)
 
     if (error) throw error
-    
     set({ profile: { ...profile, ...updates } })
   },
 }))
 
-// Initialize auth state
+// Initial session check
 supabase.auth.getSession().then(({ data: { session } }) => {
   useAuthStore.setState({ user: session?.user ?? null, loading: false })
   if (session?.user) {
@@ -111,6 +109,7 @@ supabase.auth.getSession().then(({ data: { session } }) => {
   }
 })
 
+// Realtime auth listener
 supabase.auth.onAuthStateChange((_event, session) => {
   useAuthStore.setState({ user: session?.user ?? null })
   if (session?.user) {
