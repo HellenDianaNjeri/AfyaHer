@@ -3,12 +3,14 @@ import { useAuthStore } from '../../stores/authStore'
 import { useTranslation } from 'react-i18next'
 import { Heart, Eye, EyeOff } from 'lucide-react'
 
+type UserRole = 'patient' | 'doctor' | 'admin'
+
 export function AuthForm() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
-  const [role, setRole] = useState<'patient' | 'doctor' | 'admin'>('patient')
+  const [role, setRole] = useState<UserRole>('patient')
   const [bio, setBio] = useState('')
   const [language, setLanguage] = useState<'en' | 'sw'>('en')
   const [showPassword, setShowPassword] = useState(false)
@@ -50,7 +52,7 @@ export function AuthForm() {
             {isSignUp ? 'Create your account' : 'Sign in to your account'}
           </p>
         </div>
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm space-y-4">
             {isSignUp && (
@@ -70,7 +72,7 @@ export function AuthForm() {
                 />
               </div>
             )}
-            
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 {t('auth.email')}
@@ -87,7 +89,7 @@ export function AuthForm() {
                 placeholder="Enter your email"
               />
             </div>
-            
+
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 {t('auth.password')}
@@ -119,26 +121,24 @@ export function AuthForm() {
             </div>
 
             {isSignUp && (
-              <div>
-                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-                  {t('auth.role')}
-                </label>
-                <select
-                  id="role"
-                  name="role"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as UserRole)}
-                  className="relative block w-full px-3 py-2 border border-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-pink-500 focus:border-pink-500 focus:z-10 sm:text-sm"
-                >
-                  <option value="patient">{t('auth.patient')}</option>
-                  <option value="doctor">{t('auth.doctor')}</option>
-                  <option value="admin">{t('auth.admin')}</option>
-                </select>
-              </div>
-            )}
-
-            {isSignUp && (
               <>
+                <div>
+                  <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
+                    {t('auth.role')}
+                  </label>
+                  <select
+                    id="role"
+                    name="role"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value as UserRole)}
+                    className="relative block w-full px-3 py-2 border border-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-pink-500 focus:border-pink-500 focus:z-10 sm:text-sm"
+                  >
+                    <option value="patient">{t('auth.patient')}</option>
+                    <option value="doctor">{t('auth.doctor')}</option>
+                    <option value="admin">{t('auth.admin')}</option>
+                  </select>
+                </div>
+
                 <div>
                   <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
                     {t('auth.bio')}
@@ -195,8 +195,7 @@ export function AuthForm() {
             >
               {isSignUp
                 ? 'Already have an account? Sign in'
-                : "Don't have an account? Sign up"
-              }
+                : "Don't have an account? Sign up"}
             </button>
           </div>
         </form>
